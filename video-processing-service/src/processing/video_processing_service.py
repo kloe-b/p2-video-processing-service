@@ -1,60 +1,29 @@
-import subprocess
-import os
-import redis 
 import boto3
-from database import Video, db
+from rq import Queue
+from redis import Redis
+from processing import convert_video,generate_segments, generate_thumbnail
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dev:devpass@localhost:3306/p2-database'
-db.init_app(app)
-
-REDIS_HOST = '...'
-REDIS_PORT = ...  
-REDIS_CHANNEL = '...'
-
-SECRET_KEY = 'your_secret_key'
 
 AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4KSBPOMG'  
 AWS_SECRET_ACCESS_KEY = 'd78LendV+ExAfroowAQkIL3tN+YyNviJOANolBz4'  
 AWS_BUCKET_NAME = 'flasks3scalable' 
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+redis_conn = Redis(host='localhost', port=6379)
+video_conversion_queue = Queue('video_conversion', connection=redis_conn)
+thumbnail_generation_queue = Queue('thumbnail_generation', connection=redis_conn)
+video_chunking_queue = Queue('video_chunking', connection=redis_conn)
 
-VIDEO_SEGMENT_DIR = 'video_segments'
-THUMBNAIL_DIR = 'thumbnails'
-VIDEO_CONVERTS_DIR = 'converts'
-
-if not os.path.exists(VIDEO_CONVERTS_DIR):
-    os.makedirs(VIDEO_CONVERTS_DIR)
-
-if not os.path.exists(VIDEO_SEGMENT_DIR):
-    os.makedirs(VIDEO_SEGMENT_DIR)
-
-if not os.path.exists(THUMBNAIL_DIR):
-    os.makedirs(THUMBNAIL_DIR)
-
-@app.route('/process', methods=['POST'])
-def process_video():
-    video_id = request.form.get('video_id') 
-
-    video=s3_client.download_fileobj(AWS_BUCKET_NAME, video_id)
+def process_video(video_details):
+    with open(video_details, 'wb') as data:
+        video=s3_client.s3.download_fileobj(AWS_BUCKET_NAME, video_details, data)
+        data.seek(0)
     if video:
-        video_path = video.video_path 
-        converted_video_path = os.path.join(VIDEO_CONVERTS_DIR, video.filename.replace('.mov', '.mp4'))
-        subprocess.run(['ffmpeg', '-i', video_path, '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', converted_video_path])
-   
-        thumbnail_path = os.path.join(THUMBNAIL_DIR, video.replace('.mp4', '.jpg'))
-        subprocess.run(['ffmpeg', '-i', video_path, '-ss', '00:00:10', '-vframes', '1', '-q:v', '2', thumbnail_path])
-
-        hls_playlist = os.path.join(VIDEO_SEGMENT_DIR, 'playlist.m3u8')
-        subprocess.run(['ffmpeg', '-i', video_path, '-hls_time', '10', '-hls_list_size', '0', '-hls_segment_filename',
-                        os.path.join(VIDEO_SEGMENT_DIR, 'segment%03d.ts'), '-f', 'hls', hls_playlist])
-
-        process_video = Video( thumbnail_path,hls_playlist)
-        db.session.add(process_video)
-        db.session.commit()
+        video_conversion_queue.enqueue(convert_video, video)
+        thumbnail_generation_queue.enqueue(generate_thumbnail, video)
+        video_chunking_queue.enqueue(generate_segments, video)
         return jsonify({'message': 'Video processing complete'}), 200
     else:
         return jsonify({'error': 'Video file missing'}), 400
