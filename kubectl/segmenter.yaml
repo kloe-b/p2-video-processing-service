@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: video-processing-service
+  name: converter_worker
 spec:
   replicas: 1  
   selector:
     matchLabels:
-      app: video-processing-service
+      app: segmenter_worker
   template:
     metadata:
       labels:
-        app: video-processing-service
+        app: segmenter_worker
     spec:
       containers:
-        - name: video-processing-service
-          image: video-processing-service-image:latest  
+        - name: segmenter_worker
+          image: segmenter_worker-image:latest  
           ports:
             - containerPort: 8080  
           env:
