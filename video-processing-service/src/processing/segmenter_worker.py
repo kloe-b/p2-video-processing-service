@@ -3,8 +3,13 @@ import subprocess
 import os
 from rq import Worker, Queue, Connection
 from redis import Redis
+import logging
 
-app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filename='app.log',
+                    filemode='a')
+
 
 VIDEO_SEGMENT_DIR = 'video_segments'
 
@@ -15,13 +20,15 @@ q = Queue('video_chunking', connection=redis_conn)
 if not os.path.exists(VIDEO_SEGMENT_DIR):
     os.makedirs(VIDEO_SEGMENT_DIR)
 
-def generate_segments(video_file):
+def generate_segments(video_filename):
 
-    if video_file:
+    if os.path.exists(video_filename):
+        logging.info(f"Started processing chunking job for video: {video_filename}")
         hls_playlist = os.path.join(VIDEO_SEGMENT_DIR, 'playlist.m3u8')
-        subprocess.run(['ffmpeg', '-i', video_file.filename, '-hls_time', '10', '-hls_list_size', '0', '-hls_segment_filename',
+        subprocess.run(['ffmpeg', '-i', video_filename, '-hls_time', '10', '-hls_list_size', '0', '-hls_segment_filename',
                         os.path.join(VIDEO_SEGMENT_DIR, 'segment%03d.ts'), '-f', 'hls', hls_playlist])
-
+        
+        logging.info(f"Completed processing chunking job for video: {video_filename}")
         return 'Segement generation complete', 'segments '+ hls_playlist
     else:
         return 'Video file missing'

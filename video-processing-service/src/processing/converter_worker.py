@@ -2,6 +2,12 @@ import subprocess
 import os
 from rq import Worker, Queue, Connection
 from redis import Redis
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filename='app.log',
+                    filemode='a')
 
 
 CONVERTED_VIDEO_DIR = 'converted_videos'
@@ -13,14 +19,14 @@ q = Queue('video_conversion', connection=redis_conn)
 if not os.path.exists(CONVERTED_VIDEO_DIR):
     os.makedirs(CONVERTED_VIDEO_DIR)
 
-def convert_video(video_file):
-    if video_file:
-        video_path = os.path.join(CONVERTED_VIDEO_DIR, video_file.filename.replace('...', '.mp4'))
-        video_file.save(video_path)
+def convert_video(video_filename):
+    if os.path.exists(video_filename):
+        logging.info(f"Started processing converting job for video: {video_filename}")
+        output_video_path = os.path.join(CONVERTED_VIDEO_DIR, os.path.basename(video_filename).replace('.mp4', '_converted.mp4'))
+        subprocess.run(['ffmpeg', '-i', video_filename, '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', output_video_path])
 
-        subprocess.run(['ffmpeg', '-i', video_path, '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', video_path])
-
-        return 'Video conversion complete. Converted video path: ' + video_path
+        logging.info(f"Completed processing converting job for video: {video_filename}")
+        return 'Video conversion complete. Converted video path: ' + output_video_path
     else:
         return 'Video file missing'
 
