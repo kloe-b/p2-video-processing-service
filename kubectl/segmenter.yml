@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: segmenter-worker
+spec:
+  replicas: 3  
+  selector:
+    matchLabels:
+      app: segmenter-worker
+  template:
+    metadata:
+      labels:
+        app: segmenter-worker
+    spec:
+      containers:
+        - name: segmenter-worker
+          image: segmenter-worker-image:latest  
+          ports:
+            - containerPort: 8080  
+          env:
+            - name: VIDEO_SEGMENT_DIR
+              value: video_segments
+            - name: SECRET_KEY
+              value: your_secret_key 
