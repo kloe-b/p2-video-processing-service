@@ -41,8 +41,16 @@ def generate_thumbnail(video_filename):
         
         # Upload the thumbnail to S3
         with open(thumbnail_path, 'rb') as file:
-            s3_client.upload_fileobj(file, AWS_BUCKET_NAME, os.path.basename(thumbnail_path))
-        
+            s3_client.upload_fileobj(
+            Fileobj=file, 
+            Bucket=AWS_BUCKET_NAME, 
+            Key=os.path.basename(thumbnail_path),
+            ExtraArgs={
+                'ContentType': 'image/jpeg',
+                'ContentDisposition': 'inline'
+            }
+        )
+
         # Delete local files
         os.remove(download_path)
         os.remove(thumbnail_path)
