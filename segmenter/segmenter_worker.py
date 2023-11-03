@@ -20,7 +20,10 @@ logging.basicConfig(level=logging.DEBUG,
 
 VIDEO_SEGMENT_DIR = 'video_segments'
 
-redis_conn = Redis(host='redis', port=6379)
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+
+redis_conn = Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 if not os.path.exists(VIDEO_SEGMENT_DIR):
     os.makedirs(VIDEO_SEGMENT_DIR)

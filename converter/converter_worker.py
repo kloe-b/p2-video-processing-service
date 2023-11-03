@@ -20,7 +20,11 @@ logging.basicConfig(level=logging.DEBUG,
 CONVERTED_VIDEO_DIR = 'converted_videos'
 
 
-redis_conn = Redis(host='redis', port=6379)
+
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+
+redis_conn = Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 if not os.path.exists(CONVERTED_VIDEO_DIR):
     os.makedirs(CONVERTED_VIDEO_DIR)

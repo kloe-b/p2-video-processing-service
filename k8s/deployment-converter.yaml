@@ -1,22 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: thumbnail_worker
+  name: converter-deployment
 spec:
-  replicas: 3  
+  replicas: 1
   selector:
     matchLabels:
-      app: thumbnail_worker
+      app: converter
   template:
     metadata:
       labels:
-        app: thumbnail_worker
+        app: converter
     spec:
       containers:
-        - name: thumbnail_worker
-          image: thumbnail_worker-image:latest  
-          ports:
-            - containerPort: 8080  
+        - name: converter
+          image: ghcr.io/kloe-b/p2-video-processing-service/p2-converter:latest
           env:
             - name: AWS_ACCESS_KEY_ID
               value: AKIASQQQG2XF4V573GL6
@@ -24,6 +22,11 @@ spec:
               value: CdttLTHaOvXicRjrrkBXrqpK2daZNWXeG7fh3uUu
             - name: AWS_BUCKET_NAME
               value: flasks3scalable
-            - name: SECRET_KEY
-              value: your_secret_key 
+            - name: REDIS_HOST
+              value: "redis-service.default.svc"
+            - name: REDIS_PORT
+              value: "6379"
+      imagePullSecrets:
+        - name: regcred
+            
 
