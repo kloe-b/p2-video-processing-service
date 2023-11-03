@@ -5,14 +5,14 @@ import logging
 import boto3
 import time
 
-AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4V573GL6'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_BUCKET_NAME = 'flasks3scalable'
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 
-redis_conn = Redis(host='localhost', port=6379)
+redis_conn = Redis(host='redis', port=6379)
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s',

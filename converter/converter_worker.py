@@ -5,9 +5,9 @@ import logging
 import boto3
 import time
 
-AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4V573GL6'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_BUCKET_NAME = 'flasks3scalable'
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG,
 CONVERTED_VIDEO_DIR = 'converted_videos'
 
 
-redis_conn = Redis(host='localhost', port=6379)
+redis_conn = Redis(host='redis', port=6379)
 
 if not os.path.exists(CONVERTED_VIDEO_DIR):
     os.makedirs(CONVERTED_VIDEO_DIR)
@@ -34,7 +34,8 @@ def convert_video(video_filename):
     except Exception as e:
         logging.error(f"Error during download: {e}")
         return 'Error during download'
-
+    
+    print(download_path)
     if os.path.exists(download_path) and os.path.getsize(download_path) > 0:
         logging.info(f"Started processing converting job for video: {video_filename}")
         
