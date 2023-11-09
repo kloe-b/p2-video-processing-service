@@ -42,7 +42,7 @@ def generate_thumbnail(video_filename):
     if os.path.exists(download_path):
         logging.info(f"Started processing thumbnail job for video: {video_filename}")
         thumbnail_path = os.path.join(THUMBNAIL_DIR, os.path.basename(video_filename).replace('.mp4', '.jpg'))
-        subprocess.run(['ffmpeg', '-i', download_path, '-ss', '00:00:10', '-vframes', '1', '-q:v', '2', thumbnail_path])
+        subprocess.run(['ffmpeg', '-i', download_path, '-ss', '00:00:01', '-vframes', '1', '-q:v', '2', thumbnail_path])
         
         # Upload the thumbnail to S3
         with open(thumbnail_path, 'rb') as file:
