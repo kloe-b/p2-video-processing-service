@@ -67,7 +67,7 @@ def generate_thumbnail(video_filename):
         }
 
         # Make the POST request to the user-service
-        response = requests.post('http://user-service-service.default.svc:8080/api/update-thumbnail', json=request_data)
+        response = requests.post('http://user-service-service.default.svc.cluster.local:80/api/update-thumbnail', json=request_data)
         if response.status_code == 200:
             logging.info('Thumbnail filename updated successfully')
         else:
