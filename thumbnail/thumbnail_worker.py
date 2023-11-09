@@ -9,6 +9,7 @@ import time
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
+USER_SERVICE_URL = os.environ.get('USER_SERVICE_URL')
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
@@ -63,11 +64,11 @@ def generate_thumbnail(video_filename):
 
         request_data = {
             'video_filename': os.path.basename(video_filename),
-            'thumbnail_filename': os.path.basename(thumbnail_path)
+            'status': 'success'
         }
 
         # Make the POST request to the user-service
-        response = requests.post('http://user-service-service.default.svc.cluster.local:80/api/update-thumbnail', json=request_data)
+        response = requests.post(f'{USER_SERVICE_URL}/api/worker-status', json=request_data)
         if response.status_code == 200:
             logging.info('Thumbnail filename updated successfully')
         else:
