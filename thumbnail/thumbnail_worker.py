@@ -3,6 +3,7 @@ import os
 from redis import Redis
 import logging
 import boto3
+import requests
 import time
 
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -59,9 +60,18 @@ def generate_thumbnail(video_filename):
         os.remove(thumbnail_path)
         
         logging.info(f"Completed processing thumbnail job for video: {video_filename}")
-        print('Thumbnail generation complete', 'thumbnail_path ' + thumbnail_path)
-    else:
-        print('Video file missing')
+
+        request_data = {
+            'video_filename': os.path.basename(video_filename),
+            'thumbnail_filename': os.path.basename(thumbnail_path)
+        }
+
+        # Make the POST request to the user-service
+        response = requests.post('http://user-service:8080/api/update-thumbnail', json=request_data)
+        if response.status_code == 200:
+            logging.info('Thumbnail filename updated successfully')
+        else:
+            logging.error(f'Failed to update thumbnail filename: {response.content}')
 
 def process_queue():
     print('Starting thumbnail workers...')
