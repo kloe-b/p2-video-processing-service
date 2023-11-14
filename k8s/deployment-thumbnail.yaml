@@ -23,9 +23,11 @@ spec:
             - name: AWS_BUCKET_NAME
               value: flasks3scalable
             - name: REDIS_HOST
-              value: "redis-service.default.svc.cluster.local"
+              value: "redis-service.default.svc"
             - name: REDIS_PORT
               value: "6379"
+            - name: USER_SERVICE_URL
+              value: "http://user-service-service.default.svc:80"
       imagePullSecrets:
         - name: regcred
             
